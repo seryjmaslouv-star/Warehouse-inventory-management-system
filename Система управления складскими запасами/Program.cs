@@ -558,9 +558,58 @@ namespace Система_управления_складскими_запаса�
                                 break;
                             }
 
-                            var itemToSearch = wareHouses.FirstOrDefault(wh => wh.ID == whToSearchItem);
+                            var targetWareHouse = wareHouses.First(wh => wh.ID == whToSearchItem);
 
-                            foreach (var item in itemToSearch)
+                            if (targetWareHouse.Items is null || targetWareHouse.Items.Count == 0)
+                            {
+                                Console.WriteLine($"На складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address} нет товаров");
+                                break;
+                            }
+
+                            Console.WriteLine($"Товары на складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address}");
+
+                            foreach (var item in targetWareHouse.Items)
+                            {
+                                Console.WriteLine($"ID: {item.ID} | Название: {item.Name} | Категория: {item.Category} | Цена: {item.Price} | Кол-во: {item.Quantity}");
+
+                                switch (item)
+                                {
+                                    case Electronics electronics:
+                                        Console.WriteLine($"Гарантия: {electronics.WarrantyPeriod} мес.");
+                                        break;
+
+                                    case Food food:
+                                        Console.WriteLine($"Срок годности: {food.ExpirationDate:dd.MM.yyyy}");
+                                        break;
+
+
+                                    case Furniture furniture:
+                                        Console.WriteLine($"Габариты: {furniture.Dimesions}");
+                                        break;
+                                }
+                            }
+                            break;
+
+                        case 8:
+                            Console.WriteLine("Введите ID склада, в которым будет искаться товар: ");
+
+                            if (!int.TryParse(Console.ReadLine(), out int whToTotalValue) || wareHouses.FirstOrDefault(wh => wh.ID == whToTotalValue) is null)
+                            {
+                                Console.WriteLine("Склад не найден.");
+                                break;
+                            }
+
+                            var whTotalValue = wareHouses.First(wh => wh.ID == whToTotalValue);
+
+                            if (whTotalValue.Items is null || whTotalValue.Items.Count == 0)
+                            {
+                                Console.WriteLine($"На складе ID: {whTotalValue.ID} |  Название: {whTotalValue.Name} | Адрес: {whTotalValue.Address} нет товаров");
+                                break;
+                            }
+
+
+
+                            foreach (var item in whToTotalValue.Items)
                             {
 
                             }
