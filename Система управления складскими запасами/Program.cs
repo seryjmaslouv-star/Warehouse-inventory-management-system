@@ -166,7 +166,7 @@ namespace Система_управления_складскими_запаса�
 
             foreach (WareHouseItem item in Items)
             {
-                total += item.Price;
+                total += item.Price * item.Quantity;
             }
 
             return total;
@@ -591,7 +591,7 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 8:
-                            Console.WriteLine("Введите ID склада, в которым будет искаться товар: ");
+                            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
 
                             if (!int.TryParse(Console.ReadLine(), out int whToTotalValue) || wareHouses.FirstOrDefault(wh => wh.ID == whToTotalValue) is null)
                             {
@@ -607,13 +607,69 @@ namespace Система_управления_складскими_запаса�
                                 break;
                             }
 
+                            Console.WriteLine($"Общая стоимость на складе {whTotalValue.Name} равна {whTotalValue.GetTotalValue()} руб.");
+                            break;
 
+                        case 9:
+                            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
 
-                            foreach (var item in whToTotalValue.Items)
+                            if (!int.TryParse(Console.ReadLine(), out int whToSearchCategory) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchCategory) is null)
                             {
-
+                                Console.WriteLine("Склад не найден.");
+                                break;
                             }
 
+                            var whToSearch = wareHouses.First(wh=>wh.ID == whToSearchCategory);
+
+                            Console.WriteLine("Введите категорию: ");
+                            string searchCategory = Console.ReadLine();
+                            if(string.IsNullOrWhiteSpace(searchCategory))
+                            {
+                                Console.WriteLine("Некорректный ввод.");
+                                break;
+                            }
+
+                            whToSearch.GetItemsByCategory(searchCategory);
+                            break;
+
+                        case 10:
+                            Console.WriteLine("Выбирете тип предмета:");
+                            Console.WriteLine("╔════════════════════════════════════════╗");
+                            Console.WriteLine("║ 1. Электроника                         ║");
+                            Console.WriteLine("║ 2. Еда                                 ║");
+                            Console.WriteLine("║ 3. Мебель                              ║");
+                            Console.WriteLine("╚════════════════════════════════════════╝");
+                            if (!int.TryParse(Console.ReadLine(), out int userChoiceToCalculate))
+                            {
+                                Console.WriteLine("Некорректный ввод.");
+                                break;
+                            }
+
+                            Console.WriteLine("Введите срок хранения");
+                            if(!int.TryParse(Console.ReadLine(), out int days))
+                            {
+                                Console.WriteLine("Некорректный ввод.");
+                                break;
+                            }
+
+                            decimal result;
+
+                            switch(userChoiceToCalculate)
+                            {
+                                case 1:
+                                    Food food = new Food();
+                                    result = food.CalculateStorageCost(days);
+                                    break;
+                            }
+                            
+                            break;
+
+                        case 11:
+                            isRuning = false;
+                            break;
+
+                        default:
+                            Console.WriteLine("Некорректный ввод.");
                             break;
                     }
                 }
