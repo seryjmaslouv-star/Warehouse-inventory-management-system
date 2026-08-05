@@ -633,35 +633,44 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 10:
-                            Console.WriteLine("Выбирете тип предмета:");
-                            Console.WriteLine("╔════════════════════════════════════════╗");
-                            Console.WriteLine("║ 1. Электроника                         ║");
-                            Console.WriteLine("║ 2. Еда                                 ║");
-                            Console.WriteLine("║ 3. Мебель                              ║");
-                            Console.WriteLine("╚════════════════════════════════════════╝");
-                            if (!int.TryParse(Console.ReadLine(), out int userChoiceToCalculate))
+                            Console.WriteLine("Введите ID склада, на котором находится товар: ");
+                            if (!int.TryParse(Console.ReadLine(), out int whIdForCost) || wareHouses.FirstOrDefault(wh => wh.ID == whIdForCost) is null)
+                            {
+                                Console.WriteLine("Склад не найден.");
+                                break;
+                            }
+
+                            var whForCost = wareHouses.First(wh => wh.ID == whIdForCost);
+
+                            if(whForCost.Items is null || whForCost.Items.Count ==0)
+                            {
+                                Console.WriteLine("На этом складе нет товаров.");
+                                break;
+                            }
+
+                            Console.WriteLine("Введите ID товара для расчета стоимости хранения: ");
+                            if (!int.TryParse(Console.ReadLine(), out int itemIdForCost))
                             {
                                 Console.WriteLine("Некорректный ввод.");
+                                break;
+                            }
+
+                            var targetItem = whForCost.Items.FirstOrDefault(item => item.ID == itemIdForCost);
+
+                            if(targetItem is null)
+                            {
+                                Console.WriteLine("Товар с таким ID не найден на этом складе.");
                                 break;
                             }
 
                             Console.WriteLine("Введите срок хранения");
-                            if(!int.TryParse(Console.ReadLine(), out int days))
+                            if (!int.TryParse(Console.ReadLine(), out int days))
                             {
                                 Console.WriteLine("Некорректный ввод.");
                                 break;
                             }
 
-                            decimal result;
-
-                            switch(userChoiceToCalculate)
-                            {
-                                case 1:
-                                    Food food = new Food();
-                                    result = food.CalculateStorageCost(days);
-                                    break;
-                            }
-                            
+                            Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
                             break;
 
                         case 11:
