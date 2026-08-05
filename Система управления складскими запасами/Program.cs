@@ -540,9 +540,32 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 6:
+                            Console.WriteLine("Список складов: ");
+
+                            foreach (WareHouse wareHouse in wareHouses)
+                            {
+                                Console.WriteLine($"ID: {wareHouse.ID} | Название: {wareHouse.Name} | Адрес: {wareHouse.Address}");
+                            }
 
                             break;
 
+                        case 7:
+                            Console.WriteLine("Введите ID склада, в которым будет искаться товар: ");
+
+                            if (!int.TryParse(Console.ReadLine(), out int whToSearchItem) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchItem) is null)
+                            {
+                                Console.WriteLine("Склад не найден.");
+                                break;
+                            }
+
+                            var itemToSearch = wareHouses.FirstOrDefault(wh => wh.ID == whToSearchItem);
+
+                            foreach (var item in itemToSearch)
+                            {
+
+                            }
+
+                            break;
                     }
                 }
                 catch (Exception ex)
