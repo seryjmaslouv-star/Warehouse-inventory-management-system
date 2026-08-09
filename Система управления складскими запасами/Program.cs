@@ -269,138 +269,7 @@ namespace Система_управления_складскими_запаса�
                     switch (userChoice)
                     {
                         case 1:
-                            Console.WriteLine("Введите ID склада, в который добавиться товар: ");
-                            if(!int.TryParse(Console.ReadLine(), out int whIDToCreateItem) || wareHouses.FirstOrDefault(wh => wh.ID == whIDToCreateItem) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var targetWhToCreateItem = wareHouses.First(wh =>  wh.ID == whIDToCreateItem);
-
-                            Console.WriteLine("Выбирете тип предмета:");
-                            Console.WriteLine("╔════════════════════════════════════════╗");
-                            Console.WriteLine("║ 1. Электроника                         ║");
-                            Console.WriteLine("║ 2. Еда                                 ║");
-                            Console.WriteLine("║ 3. Мебель                              ║");
-                            Console.WriteLine("╚════════════════════════════════════════╝");
-                            if (!int.TryParse(Console.ReadLine(), out int itemTypeChoice))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите ID:");
-                            if(!int.TryParse(Console.ReadLine(), out int itemID))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите название:");
-                            string itemName = Console.ReadLine();
-                            if(string.IsNullOrWhiteSpace(itemName))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите категорию:");
-                            string itemCategory = Console.ReadLine();
-                            if (string.IsNullOrWhiteSpace(itemCategory))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите цену:");
-                            if (!decimal.TryParse(Console.ReadLine(), out decimal itemPrice))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите количество:");
-                            if (!int.TryParse(Console.ReadLine(), out int itemQuantity))
-                            {
-                                Console.WriteLine("Некорректный ввод .");
-                                break;
-                            }
-
-                            DateTime itemLastUpdate = DateTime.Now;
-
-                            try
-                            {
-                                switch (itemTypeChoice)
-                                {
-                                    case 1:
-                                        while(true)
-                                        {
-                                            Console.WriteLine("Введите гарантийный срок (мес.):");
-
-                                            if (int.TryParse(Console.ReadLine(), out int electronicsWarrantyPeriod) || electronicsWarrantyPeriod >= 0)
-                                            {
-                                                targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Electronics, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, electronicsWarrantyPeriod));
-
-                                                Console.WriteLine("Товар добавлен.");
-
-                                                break;
-                                            }
-                                            Console.WriteLine("Некорректный ввод.");
-                                        }
-                                        break;
-
-                                    case 2:
-                                        DateTime foodExpirationDate;
-                                        while (true)
-                                        {
-                                            Console.WriteLine("Введите дату окончания срока (в формате ДД.ММ.ГГГГ, например 15.08.2026):");
-                                            if (DateTime.TryParse(Console.ReadLine(), out foodExpirationDate))
-                                            {
-                                                targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Food, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, foodExpirationDate));
-
-                                                Console.WriteLine("Товар добавлен.");
-
-                                                break;
-                                            }
-                                            Console.WriteLine("Некорректный ввод.");
-                                        }                                       
-                                        break;
-
-                                    case 3:
-                                        int lenght = 0, width = 0, height = 0;
-
-                                        while (true)
-                                        {
-                                            Console.WriteLine("Введите габариты товара в формате ДлинахШиринахВысота");
-
-                                            string dimensionsInput = Console.ReadLine()?.ToLower().Replace(" "," ");
-
-                                            string[] parts = dimensionsInput.Split(new char[] { 'x', 'х' });
-
-                                            if (parts.Length == 3 && int.TryParse(parts[0], out lenght) && int.TryParse(parts[1], out width) && int.TryParse(parts[3], out height))
-                                            {
-                                                if (lenght > 0 && width > 0 && height > 0)
-                                                {
-                                                    break;
-                                                }
-                                            }
-                                            Console.WriteLine("Некорректный ввод.");
-                                        }
-
-                                        string furnitureDimession = $"{lenght}x{width}x{height}";
-
-                                        targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Furniture, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, furnitureDimession));
-
-                                        Console.WriteLine("Товар добавлен.");
-                                        break;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Ошибка {ex.Message}");
-                            }
-
+                            AddItemToWH(wareHouses, itemFactory);
                             break;
 
                         case 2:
@@ -686,6 +555,141 @@ namespace Система_управления_складскими_запаса�
                 {
                     Console.WriteLine($"Ошибка {ex.Message}");
                 }
+            }
+        }
+
+        static void AddItemToWH(List<WareHouse> wareHouses, WareHouseItemFactory itemFactory)
+        {
+            Console.WriteLine("Введите ID склада, в который добавиться товар: ");
+            if (!int.TryParse(Console.ReadLine(), out int whIDToCreateItem) || wareHouses.FirstOrDefault(wh => wh.ID == whIDToCreateItem) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                break;
+            }
+
+            var targetWhToCreateItem = wareHouses.First(wh => wh.ID == whIDToCreateItem);
+
+            Console.WriteLine("Выбирете тип предмета:");
+            Console.WriteLine("╔════════════════════════════════════════╗");
+            Console.WriteLine("║ 1. Электроника                         ║");
+            Console.WriteLine("║ 2. Еда                                 ║");
+            Console.WriteLine("║ 3. Мебель                              ║");
+            Console.WriteLine("╚════════════════════════════════════════╝");
+            if (!int.TryParse(Console.ReadLine(), out int itemTypeChoice))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                break;
+            }
+
+            Console.WriteLine("Введите ID:");
+            if (!int.TryParse(Console.ReadLine(), out int itemID))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                break;
+            }
+
+            Console.WriteLine("Введите название:");
+            string itemName = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                break;
+            }
+
+            Console.WriteLine("Введите категорию:");
+            string itemCategory = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(itemCategory))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                break;
+            }
+
+            Console.WriteLine("Введите цену:");
+            if (!decimal.TryParse(Console.ReadLine(), out decimal itemPrice))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                break;
+            }
+
+            Console.WriteLine("Введите количество:");
+            if (!int.TryParse(Console.ReadLine(), out int itemQuantity))
+            {
+                Console.WriteLine("Некорректный ввод .");
+                break;
+            }
+
+            DateTime itemLastUpdate = DateTime.Now;
+
+            try
+            {
+                switch (itemTypeChoice)
+                {
+                    case 1:
+                        while (true)
+                        {
+                            Console.WriteLine("Введите гарантийный срок (мес.):");
+
+                            if (int.TryParse(Console.ReadLine(), out int electronicsWarrantyPeriod) || electronicsWarrantyPeriod >= 0)
+                            {
+                                targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Electronics, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, electronicsWarrantyPeriod));
+
+                                Console.WriteLine("Товар добавлен.");
+
+                                break;
+                            }
+                            Console.WriteLine("Некорректный ввод.");
+                        }
+                        break;
+
+                    case 2:
+                        DateTime foodExpirationDate;
+                        while (true)
+                        {
+                            Console.WriteLine("Введите дату окончания срока (в формате ДД.ММ.ГГГГ, например 15.08.2026):");
+                            if (DateTime.TryParse(Console.ReadLine(), out foodExpirationDate))
+                            {
+                                targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Food, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, foodExpirationDate));
+
+                                Console.WriteLine("Товар добавлен.");
+
+                                break;
+                            }
+                            Console.WriteLine("Некорректный ввод.");
+                        }
+                        break;
+
+                    case 3:
+                        int lenght = 0, width = 0, height = 0;
+
+                        while (true)
+                        {
+                            Console.WriteLine("Введите габариты товара в формате ДлинахШиринахВысота");
+
+                            string dimensionsInput = Console.ReadLine()?.ToLower().Replace(" ", " ");
+
+                            string[] parts = dimensionsInput.Split(new char[] { 'x', 'х' });
+
+                            if (parts.Length == 3 && int.TryParse(parts[0], out lenght) && int.TryParse(parts[1], out width) && int.TryParse(parts[3], out height))
+                            {
+                                if (lenght > 0 && width > 0 && height > 0)
+                                {
+                                    break;
+                                }
+                            }
+                            Console.WriteLine("Некорректный ввод.");
+                        }
+
+                        string furnitureDimession = $"{lenght}x{width}x{height}";
+
+                        targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Furniture, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, furnitureDimession));
+
+                        Console.WriteLine("Товар добавлен.");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка {ex.Message}");
             }
         }
     }
