@@ -273,273 +273,39 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 2:
-                            Console.WriteLine("Введите ID склада, с которого будет удалён товар: ");
-                            if(!int.TryParse(Console.ReadLine(), out int whIDToRemove) || wareHouses.FirstOrDefault(wh => wh.ID == whIDToRemove) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            WareHouse targetWhToRemoveItem = wareHouses.First(wh  => wh.ID == whIDToRemove);
-
-                            Console.WriteLine("Введите ID: ");
-                            if (!int.TryParse(Console.ReadLine(), out int IDToRemove))
-                            {
-                                Console.WriteLine("Некорректный ID");
-                                break;
-                            }
-
-                            var itemToRemove = targetWhToRemoveItem.Items.FirstOrDefault(item => item.ID == IDToRemove);
-
-                            if (itemToRemove is not null)
-                            {
-                                targetWhToRemoveItem.RemoveItem(itemToRemove);
-                            }
-
-                            Console.WriteLine("Товар удалён");
+                            RemoveItemFromWH(wareHouses);
                             break;
 
                         case 3:
-                            Console.WriteLine("Введите ID склада-отправителя: ");
-                            if (!int.TryParse(Console.ReadLine(), out int sourceWhID) || wareHouses.FirstOrDefault(wh => wh.ID == sourceWhID) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var sourceWh = wareHouses.First(wh => wh.ID == sourceWhID);
-
-                            Console.WriteLine("Введите ID склада-получателя: ");
-                            if(!int.TryParse(Console.ReadLine(), out int targetWhID) || wareHouses.FirstOrDefault(wh => wh.ID == targetWhID) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var targetWh = wareHouses.First(wh => wh.ID == targetWhID);
-
-                            Console.WriteLine("Введите ID товара: ");
-                            if(!int.TryParse(Console.ReadLine(), out int transferItemID))
-                            {
-                                Console.WriteLine("Некорректный ID");
-                                break;
-                            }
-
-                            var itemToTransfer = sourceWh.Items.FirstOrDefault(item => item.ID == transferItemID);
-
-                            if (itemToTransfer is null)
-                            {
-                                Console.WriteLine($"Товар с ID {transferItemID} не найден на складе {targetWh.Name}");
-                                break;
-                            }
-
-                            Console.WriteLine($"Введите колличество товара (Доступно: {itemToTransfer.Quantity}): ");
-                            if (!int.TryParse(Console.ReadLine(), out int transferItemQuantity) || transferItemQuantity <= 0)
-                            {
-                                Console.WriteLine("Некорректный ввод");
-                                break;
-                            }
- 
-                            if(transferItemQuantity > itemToTransfer.Quantity)
-                            {
-                                Console.WriteLine($"Недостаточно товара. Вы пытаетесь переместить {transferItemQuantity}, но на складе есть только {itemToTransfer.Quantity}");
-                                break;
-                            }
-
-                            itemToTransfer.TransferTo(targetWh, transferItemQuantity);
-
-                            Console.WriteLine("Товар перемещён");
+                            TransferItemTo(wareHouses);
                             break;
 
                         case 4:
-                            Console.WriteLine("Введите ID склада: ");
-                            if(!int.TryParse(Console.ReadLine(), out int wareHouseIDToCreate) || wareHouses.FirstOrDefault(wh => wh.ID == wareHouseIDToCreate) is not null)
-                            {
-                                Console.WriteLine("Склад с таким ID уже существует");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите название склада: ");
-                            string wareHouseName = Console.ReadLine();
-                            if (string.IsNullOrWhiteSpace(wareHouseName))
-                            {
-                                Console.WriteLine("Некорректный ввод");
-                                break;
-                            }
-                            Console.WriteLine("Введите адрес склада: ");
-                            string wareHouseAddress = Console.ReadLine();
-                            if(string.IsNullOrWhiteSpace(wareHouseAddress)) 
-                            {
-                                Console.WriteLine("Некорректный ввод");
-                                break;
-                            }
-
-                            WareHouse newWareHouse = wareHouseFactory.CreateWareHouse(wareHouseIDToCreate, wareHouseName, wareHouseAddress);
-
-                            wareHouses.Add(newWareHouse);
-
-                            Console.WriteLine("Склад добавлен");
+                            AddWH(wareHouses, wareHouseFactory);
                             break;
 
                         case 5:
-                            Console.WriteLine("Введите ID склада: ");
-                            if (!int.TryParse(Console.ReadLine(), out int wareHouseIDToRemove))
-                            {
-                                Console.WriteLine("Некорректный ввод");
-                                break;
-                            }
-
-                            WareHouse wareHouseToRemove = wareHouses.FirstOrDefault(wh => wh.ID == wareHouseIDToRemove);
-
-                            if (wareHouseToRemove == null)
-                            {
-                                Console.WriteLine("Склад не найден");
-                                break;
-                            }
-
-                            if(wareHouseToRemove.Items is not null && wareHouseToRemove.Items.Count > 0)
-                            {
-                                Console.WriteLine("Нельзя удалить склад пока в нём есть предметы");
-                                break;
-                            }
-
-                            wareHouses.Remove(wareHouseToRemove);
-
-                            Console.WriteLine("Склад удалён");
+                            RemoveWH(wareHouses);
                             break;
 
                         case 6:
-                            Console.WriteLine("Список складов: ");
-
-                            foreach (WareHouse wareHouse in wareHouses)
-                            {
-                                Console.WriteLine($"ID: {wareHouse.ID} | Название: {wareHouse.Name} | Адрес: {wareHouse.Address}");
-                            }
-
+                            GetWHList(wareHouses);
                             break;
 
                         case 7:
-                            Console.WriteLine("Введите ID склада, в которым будет искаться товар: ");
-
-                            if (!int.TryParse(Console.ReadLine(), out int whToSearchItem) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchItem) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var targetWareHouse = wareHouses.First(wh => wh.ID == whToSearchItem);
-
-                            if (targetWareHouse.Items is null || targetWareHouse.Items.Count == 0)
-                            {
-                                Console.WriteLine($"На складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address} нет товаров");
-                                break;
-                            }
-
-                            Console.WriteLine($"Товары на складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address}");
-
-                            foreach (var item in targetWareHouse.Items)
-                            {
-                                Console.WriteLine($"ID: {item.ID} | Название: {item.Name} | Категория: {item.Category} | Цена: {item.Price} | Кол-во: {item.Quantity}");
-
-                                switch (item)
-                                {
-                                    case Electronics electronics:
-                                        Console.WriteLine($"Гарантия: {electronics.WarrantyPeriod} мес.");
-                                        break;
-
-                                    case Food food:
-                                        Console.WriteLine($"Срок годности: {food.ExpirationDate:dd.MM.yyyy}");
-                                        break;
-
-
-                                    case Furniture furniture:
-                                        Console.WriteLine($"Габариты: {furniture.Dimesions}");
-                                        break;
-                                }
-                            }
+                            GetItemListInWH(wareHouses);
                             break;
 
                         case 8:
-                            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
-
-                            if (!int.TryParse(Console.ReadLine(), out int whToTotalValue) || wareHouses.FirstOrDefault(wh => wh.ID == whToTotalValue) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var whTotalValue = wareHouses.First(wh => wh.ID == whToTotalValue);
-
-                            if (whTotalValue.Items is null || whTotalValue.Items.Count == 0)
-                            {
-                                Console.WriteLine($"На складе ID: {whTotalValue.ID} |  Название: {whTotalValue.Name} | Адрес: {whTotalValue.Address} нет товаров");
-                                break;
-                            }
-
-                            Console.WriteLine($"Общая стоимость на складе {whTotalValue.Name} равна {whTotalValue.GetTotalValue()} руб.");
+                            GetTotalWHValue(wareHouses);
                             break;
 
                         case 9:
-                            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
-
-                            if (!int.TryParse(Console.ReadLine(), out int whToSearchCategory) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchCategory) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var whToSearch = wareHouses.First(wh=>wh.ID == whToSearchCategory);
-
-                            Console.WriteLine("Введите категорию: ");
-                            string searchCategory = Console.ReadLine();
-                            if(string.IsNullOrWhiteSpace(searchCategory))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            whToSearch.GetItemsByCategory(searchCategory);
+                            GetItemsByCategory(wareHouses);
                             break;
 
                         case 10:
-                            Console.WriteLine("Введите ID склада, на котором находится товар: ");
-                            if (!int.TryParse(Console.ReadLine(), out int whIdForCost) || wareHouses.FirstOrDefault(wh => wh.ID == whIdForCost) is null)
-                            {
-                                Console.WriteLine("Склад не найден.");
-                                break;
-                            }
-
-                            var whForCost = wareHouses.First(wh => wh.ID == whIdForCost);
-
-                            if(whForCost.Items is null || whForCost.Items.Count ==0)
-                            {
-                                Console.WriteLine("На этом складе нет товаров.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите ID товара для расчета стоимости хранения: ");
-                            if (!int.TryParse(Console.ReadLine(), out int itemIdForCost))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            var targetItem = whForCost.Items.FirstOrDefault(item => item.ID == itemIdForCost);
-
-                            if(targetItem is null)
-                            {
-                                Console.WriteLine("Товар с таким ID не найден на этом складе.");
-                                break;
-                            }
-
-                            Console.WriteLine("Введите срок хранения");
-                            if (!int.TryParse(Console.ReadLine(), out int days))
-                            {
-                                Console.WriteLine("Некорректный ввод.");
-                                break;
-                            }
-
-                            Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
+                            GetStorageCost(wareHouses);
                             break;
 
                         case 11:
@@ -564,7 +330,7 @@ namespace Система_управления_складскими_запаса�
             if (!int.TryParse(Console.ReadLine(), out int whIDToCreateItem) || wareHouses.FirstOrDefault(wh => wh.ID == whIDToCreateItem) is null)
             {
                 Console.WriteLine("Склад не найден.");
-                break;
+                return;
             }
 
             var targetWhToCreateItem = wareHouses.First(wh => wh.ID == whIDToCreateItem);
@@ -578,14 +344,14 @@ namespace Система_управления_складскими_запаса�
             if (!int.TryParse(Console.ReadLine(), out int itemTypeChoice))
             {
                 Console.WriteLine("Некорректный ввод.");
-                break;
+                return;
             }
 
             Console.WriteLine("Введите ID:");
             if (!int.TryParse(Console.ReadLine(), out int itemID))
             {
                 Console.WriteLine("Некорректный ввод.");
-                break;
+                return;
             }
 
             Console.WriteLine("Введите название:");
@@ -593,7 +359,7 @@ namespace Система_управления_складскими_запаса�
             if (string.IsNullOrWhiteSpace(itemName))
             {
                 Console.WriteLine("Некорректный ввод.");
-                break;
+                return;
             }
 
             Console.WriteLine("Введите категорию:");
@@ -601,21 +367,21 @@ namespace Система_управления_складскими_запаса�
             if (string.IsNullOrWhiteSpace(itemCategory))
             {
                 Console.WriteLine("Некорректный ввод.");
-                break;
+                return;
             }
 
             Console.WriteLine("Введите цену:");
             if (!decimal.TryParse(Console.ReadLine(), out decimal itemPrice))
             {
                 Console.WriteLine("Некорректный ввод.");
-                break;
+                return;
             }
 
             Console.WriteLine("Введите количество:");
             if (!int.TryParse(Console.ReadLine(), out int itemQuantity))
             {
                 Console.WriteLine("Некорректный ввод .");
-                break;
+                return;
             }
 
             DateTime itemLastUpdate = DateTime.Now;
@@ -691,6 +457,287 @@ namespace Система_управления_складскими_запаса�
             {
                 Console.WriteLine($"Ошибка {ex.Message}");
             }
+        }
+        static void RemoveItemFromWH(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада, с которого будет удалён товар: ");
+            if (!int.TryParse(Console.ReadLine(), out int whIDToRemove) || wareHouses.FirstOrDefault(wh => wh.ID == whIDToRemove) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            WareHouse targetWhToRemoveItem = wareHouses.First(wh => wh.ID == whIDToRemove);
+
+            Console.WriteLine("Введите ID: ");
+            if (!int.TryParse(Console.ReadLine(), out int IDToRemove))
+            {
+                Console.WriteLine("Некорректный ID");
+                return;
+            }
+
+            var itemToRemove = targetWhToRemoveItem.Items.FirstOrDefault(item => item.ID == IDToRemove);
+
+            if (itemToRemove is not null)
+            {
+                targetWhToRemoveItem.RemoveItem(itemToRemove);
+
+                Console.WriteLine("Товар удалён");
+            }
+            else
+            {
+                Console.WriteLine("Товар не найден");
+            }
+        }
+
+        static void TransferItemTo(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада-отправителя: ");
+            if (!int.TryParse(Console.ReadLine(), out int sourceWhID) || wareHouses.FirstOrDefault(wh => wh.ID == sourceWhID) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var sourceWh = wareHouses.First(wh => wh.ID == sourceWhID);
+
+            Console.WriteLine("Введите ID склада-получателя: ");
+            if (!int.TryParse(Console.ReadLine(), out int targetWhID) || wareHouses.FirstOrDefault(wh => wh.ID == targetWhID) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var targetWh = wareHouses.First(wh => wh.ID == targetWhID);
+
+            Console.WriteLine("Введите ID товара: ");
+            if (!int.TryParse(Console.ReadLine(), out int transferItemID))
+            {
+                Console.WriteLine("Некорректный ID");
+                return;
+            }
+
+            var itemToTransfer = sourceWh.Items.FirstOrDefault(item => item.ID == transferItemID);
+
+            if (itemToTransfer is null)
+            {
+                Console.WriteLine($"Товар с ID {transferItemID} не найден на складе {targetWh.Name}");
+                return;
+            }
+
+            Console.WriteLine($"Введите колличество товара (Доступно: {itemToTransfer.Quantity}): ");
+            if (!int.TryParse(Console.ReadLine(), out int transferItemQuantity) || transferItemQuantity <= 0)
+            {
+                Console.WriteLine("Некорректный ввод");
+                return;
+            }
+
+            if (transferItemQuantity > itemToTransfer.Quantity)
+            {
+                Console.WriteLine($"Недостаточно товара. Вы пытаетесь переместить {transferItemQuantity}, но на складе есть только {itemToTransfer.Quantity}");
+                return;
+            }
+
+            itemToTransfer.TransferTo(targetWh, transferItemQuantity);
+
+            Console.WriteLine("Товар перемещён");
+        }
+
+        static void AddWH(List<WareHouse> wareHouses, WareHouseFactory wareHouseFactory)
+        {
+            Console.WriteLine("Введите ID склада: ");
+            if (!int.TryParse(Console.ReadLine(), out int wareHouseIDToCreate) || wareHouses.FirstOrDefault(wh => wh.ID == wareHouseIDToCreate) is not null)
+            {
+                Console.WriteLine("Склад с таким ID уже существует");
+                return;
+            }
+
+            Console.WriteLine("Введите название склада: ");
+            string wareHouseName = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(wareHouseName))
+            {
+                Console.WriteLine("Некорректный ввод");
+                return;
+            }
+            Console.WriteLine("Введите адрес склада: ");
+            string wareHouseAddress = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(wareHouseAddress))
+            {
+                Console.WriteLine("Некорректный ввод");
+                return;
+            }
+
+            WareHouse newWareHouse = wareHouseFactory.CreateWareHouse(wareHouseIDToCreate, wareHouseName, wareHouseAddress);
+
+            wareHouses.Add(newWareHouse);
+
+            Console.WriteLine("Склад добавлен");
+        }
+
+        static void RemoveWH(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада: ");
+            if (!int.TryParse(Console.ReadLine(), out int wareHouseIDToRemove))
+            {
+                Console.WriteLine("Некорректный ввод");
+                return;
+            }
+
+            WareHouse wareHouseToRemove = wareHouses.FirstOrDefault(wh => wh.ID == wareHouseIDToRemove);
+
+            if (wareHouseToRemove == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            if (wareHouseToRemove.Items is not null && wareHouseToRemove.Items.Count > 0)
+            {
+                Console.WriteLine("Нельзя удалить склад пока в нём есть предметы");
+                return;
+            }
+
+            wareHouses.Remove(wareHouseToRemove);
+
+            Console.WriteLine("Склад удалён");
+        }
+
+        static void GetWHList(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Список складов: ");
+
+            foreach (WareHouse wareHouse in wareHouses)
+            {
+                Console.WriteLine($"ID: {wareHouse.ID} | Название: {wareHouse.Name} | Адрес: {wareHouse.Address}");
+            }
+        }
+
+        static void GetItemListInWH(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада, в которым будет искаться товар: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int whToSearchItem) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchItem) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var targetWareHouse = wareHouses.First(wh => wh.ID == whToSearchItem);
+
+            if (targetWareHouse.Items is null || targetWareHouse.Items.Count == 0)
+            {
+                Console.WriteLine($"На складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address} нет товаров");
+                return;
+            }
+
+            Console.WriteLine($"Товары на складе ID: {targetWareHouse.ID} |  Название: {targetWareHouse.Name} | Адрес: {targetWareHouse.Address}");
+
+            foreach (var item in targetWareHouse.Items)
+            {
+                Console.WriteLine($"ID: {item.ID} | Название: {item.Name} | Категория: {item.Category} | Цена: {item.Price} | Кол-во: {item.Quantity}");
+
+                switch (item)
+                {
+                    case Electronics electronics:
+                        Console.WriteLine($"Гарантия: {electronics.WarrantyPeriod} мес.");
+                        break;
+
+                    case Food food:
+                        Console.WriteLine($"Срок годности: {food.ExpirationDate:dd.MM.yyyy}");
+                        break;
+
+
+                    case Furniture furniture:
+                        Console.WriteLine($"Габариты: {furniture.Dimesions}");
+                        break;
+                }
+            }
+        }
+
+        static void GetTotalWHValue(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int whToTotalValue) || wareHouses.FirstOrDefault(wh => wh.ID == whToTotalValue) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var whTotalValue = wareHouses.First(wh => wh.ID == whToTotalValue);
+
+            if (whTotalValue.Items is null || whTotalValue.Items.Count == 0)
+            {
+                Console.WriteLine($"На складе ID: {whTotalValue.ID} |  Название: {whTotalValue.Name} | Адрес: {whTotalValue.Address} нет товаров");
+                return;
+            }
+
+            Console.WriteLine($"Общая стоимость на складе {whTotalValue.Name} равна {whTotalValue.GetTotalValue()} руб.");
+        }
+
+        static void GetItemsByCategory(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада, для рассчёта стоимости товара: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int whToSearchCategory) || wareHouses.FirstOrDefault(wh => wh.ID == whToSearchCategory) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var whToSearch = wareHouses.First(wh => wh.ID == whToSearchCategory);
+
+            Console.WriteLine("Введите категорию: ");
+            string searchCategory = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(searchCategory))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                return;
+            }
+
+            whToSearch.GetItemsByCategory(searchCategory);
+        }
+
+        static void GetStorageCost(List<WareHouse> wareHouses)
+        {
+            Console.WriteLine("Введите ID склада, на котором находится товар: ");
+            if (!int.TryParse(Console.ReadLine(), out int whIdForCost) || wareHouses.FirstOrDefault(wh => wh.ID == whIdForCost) is null)
+            {
+                Console.WriteLine("Склад не найден.");
+                return;
+            }
+
+            var whForCost = wareHouses.First(wh => wh.ID == whIdForCost);
+
+            if (whForCost.Items is null || whForCost.Items.Count == 0)
+            {
+                Console.WriteLine("На этом складе нет товаров.");
+                return;
+            }
+
+            Console.WriteLine("Введите ID товара для расчета стоимости хранения: ");
+            if (!int.TryParse(Console.ReadLine(), out int itemIdForCost))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                return;
+            }
+
+            var targetItem = whForCost.Items.FirstOrDefault(item => item.ID == itemIdForCost);
+
+            if (targetItem is null)
+            {
+                Console.WriteLine("Товар с таким ID не найден на этом складе.");
+                return;
+            }
+
+            Console.WriteLine("Введите срок хранения");
+            if (!int.TryParse(Console.ReadLine(), out int days))
+            {
+                Console.WriteLine("Некорректный ввод.");
+                return;
+            }
+
+            Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
         }
     }
 }
