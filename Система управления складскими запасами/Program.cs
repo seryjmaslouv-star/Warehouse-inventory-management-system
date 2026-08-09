@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Система_управления_складскими_запасами;
 
@@ -13,6 +14,9 @@ namespace Система_управления_складскими_запаса�
         void TransferTo(WareHouse targetWareHouse, int quantity);
     }
 
+    [JsonDerivedType(typeof(Electronics), typeDiscriminator: "electronics")]
+    [JsonDerivedType(typeof(Food), typeDiscriminator: "food")]
+    [JsonDerivedType(typeof(Furniture), typeDiscriminator: "furniture")]
     abstract class WareHouseItem : ITransferable
     {
         public int ID { get; set; }
@@ -228,35 +232,17 @@ namespace Система_управления_складскими_запаса�
     {
         static void Main(string[] args)
         {
-            List<WareHouse> wareHouses = new List<WareHouse>();
+            List<WareHouse> wareHouses = LoadData();
 
             WareHouseFactory wareHouseFactory = new WareHouseFactory();
 
             WareHouseItemFactory itemFactory = new WareHouseItemFactory();
 
-            wareHouses.Add(wareHouseFactory.CreateWareHouse(1, "Главный склад", "ул. Центральная д.1"));
-
-            wareHouses.Add(wareHouseFactory.CreateWareHouse(2, "Запасной склад", "ул. Вторичная д.2"));
-
             bool isRuning = true;
 
             while (isRuning)
             {
-                Console.WriteLine("╔════════════════════════════════════════╗");
-                Console.WriteLine("║      СИСТЕМА УПРАВЛЕНИЯ СКЛАДАМИ       ║");
-                Console.WriteLine("╠════════════════════════════════════════╣");
-                Console.WriteLine("║ 1. Добавить товар на склад.            ║");
-                Console.WriteLine("║ 2. Удалить товар со склада.            ║");
-                Console.WriteLine("║ 3. Переместить товар между складами.   ║");
-                Console.WriteLine("║ 4. Добавить склад.                     ║");
-                Console.WriteLine("║ 5. Удалить склад.                      ║");
-                Console.WriteLine("║ 6. Показать все склады.                ║");
-                Console.WriteLine("║ 7. Показать все товары на складе.      ║");
-                Console.WriteLine("║ 8. Показать общую стоимость склада.    ║");
-                Console.WriteLine("║ 9. Найти товары по категории.          ║");
-                Console.WriteLine("║ 10. Рассчитать стоимость хранения.     ║");
-                Console.WriteLine("║ 11. Выход (сохранение данных).         ║");
-                Console.WriteLine("╚════════════════════════════════════════╝");
+                ViewMenu();
 
                 if (!int.TryParse(Console.ReadLine(), out int userChoice))
                 {
@@ -309,7 +295,7 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 11:
-                            isRuning = false;
+                            Exit(wareHouses, ref isRuning);
                             break;
 
                         default:
@@ -322,6 +308,60 @@ namespace Система_управления_складскими_запаса�
                     Console.WriteLine($"Ошибка {ex.Message}");
                 }
             }
+        }
+
+        static List<WareHouse> LoadData()
+        {
+            string filepath = "warehouses.json";
+
+            if (!File.Exists(filepath))
+            {
+                Console.WriteLine("Файловые данные не найдены. Созданы стандартный настройки.");
+
+                var wareHousefactory = new WareHouseFactory();
+
+                return new List<WareHouse>
+                {
+                    wareHousefactory.CreateWareHouse(1, "Главный склад", "ул. Центральная д.1"),
+
+                    wareHousefactory.CreateWareHouse(2, "Запасной склад", "ул. Вторичная д.2")
+                };
+            }
+
+            try
+            {
+                string jsonString = File.ReadAllText(filepath);
+
+                var loadedData = JsonSerializer.Deserialize<List<WareHouse>>(jsonString);
+
+                Console.WriteLine("Данные загружены.");
+
+                return loadedData ?? new List<WareHouse>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка {ex.Message}. Создан пустой список");
+                return new List<WareHouse>();
+            }
+        }
+
+        static void ViewMenu()
+        {
+            Console.WriteLine("╔════════════════════════════════════════╗");
+            Console.WriteLine("║      СИСТЕМА УПРАВЛЕНИЯ СКЛАДАМИ       ║");
+            Console.WriteLine("╠════════════════════════════════════════╣");
+            Console.WriteLine("║ 1. Добавить товар на склад.            ║");
+            Console.WriteLine("║ 2. Удалить товар со склада.            ║");
+            Console.WriteLine("║ 3. Переместить товар между складами.   ║");
+            Console.WriteLine("║ 4. Добавить склад.                     ║");
+            Console.WriteLine("║ 5. Удалить склад.                      ║");
+            Console.WriteLine("║ 6. Показать все склады.                ║");
+            Console.WriteLine("║ 7. Показать все товары на складе.      ║");
+            Console.WriteLine("║ 8. Показать общую стоимость склада.    ║");
+            Console.WriteLine("║ 9. Найти товары по категории.          ║");
+            Console.WriteLine("║ 10. Рассчитать стоимость хранения.     ║");
+            Console.WriteLine("║ 11. Выход (сохранение данных).         ║");
+            Console.WriteLine("╚════════════════════════════════════════╝");
         }
 
         static void AddItemToWH(List<WareHouse> wareHouses, WareHouseItemFactory itemFactory)
@@ -738,6 +778,31 @@ namespace Система_управления_складскими_запаса�
             }
 
             Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
+        }
+
+        static void Exit(List<WareHouse> wareHouses, ref bool isRunning)
+        {
+            SaveData(wareHouses);
+
+            isRunning = false;
+        }
+
+        static void SaveData(List<WareHouse> wareHouses)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+
+                string jsonString = JsonSerializer.Serialize(wareHouses, options);
+
+                File.WriteAllText("warehouses.json", jsonString);
+
+                Console.WriteLine("Данные сохранены в warehouses.json");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка {ex.Message}");
+            }
         }
     }
 }
