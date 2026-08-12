@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -230,9 +231,11 @@ namespace Система_управления_складскими_запаса�
 
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            List<WareHouse> wareHouses = LoadData();
+
+
+            List<WareHouse> wareHouses = await LoadData();
 
             WareHouseFactory wareHouseFactory = new WareHouseFactory();
 
@@ -295,7 +298,7 @@ namespace Система_управления_складскими_запаса�
                             break;
 
                         case 11:
-                            Exit(wareHouses, ref isRuning);
+                            await Exit(wareHouses, ref isRuning);
                             break;
 
                         default:
@@ -310,17 +313,35 @@ namespace Система_управления_складскими_запаса�
             }
         }
 
-        static List<WareHouse> LoadData()
+        static Task<List<WareHouse>> SaveData(List<WareHouse> wareHouses)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+
+                string jsonString = JsonSerializer.SerializeAsync(wareHouses, options);
+
+                File.Create("warehouses.json", jsonString);
+
+                Console.WriteLine("Данные сохранены в warehouses.json");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка {ex.Message}");
+            }
+        }
+
+        static Task<List<WareHouse>> LoadData()
         {
             string filepath = "warehouses.json";
 
             if (!File.Exists(filepath))
             {
-                Console.WriteLine("Файловые данные не найдены. Созданы стандартный настройки.");
+                Console.WriteLine("Файловые данные не найдены. Созданы стандартные настройки.");
 
                 var wareHousefactory = new WareHouseFactory();
 
-                return new List<WareHouse>
+                return new Task<List<WareHouse>>
                 {
                     wareHousefactory.CreateWareHouse(1, "Главный склад", "ул. Центральная д.1"),
 
@@ -330,9 +351,9 @@ namespace Система_управления_складскими_запаса�
 
             try
             {
-                string jsonString = File.ReadAllText(filepath);
+                string jsonString = File.OpenRead(filepath);
 
-                var loadedData = JsonSerializer.Deserialize<List<WareHouse>>(jsonString);
+                var loadedData = JsonSerializer.DeserializeAsync<List<WareHouse>>(jsonString);
 
                 Console.WriteLine("Данные загружены.");
 
@@ -780,29 +801,11 @@ namespace Система_управления_складскими_запаса�
             Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
         }
 
-        static void Exit(List<WareHouse> wareHouses, ref bool isRunning)
+        static async Task Exit(List<WareHouse> wareHouses, ref bool isRunning)
         {
             SaveData(wareHouses);
 
             isRunning = false;
-        }
-
-        static void SaveData(List<WareHouse> wareHouses)
-        {
-            try
-            {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-
-                string jsonString = JsonSerializer.Serialize(wareHouses, options);
-
-                File.WriteAllText("warehouses.json", jsonString);
-
-                Console.WriteLine("Данные сохранены в warehouses.json");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка {ex.Message}");
-            }
         }
     }
 }
