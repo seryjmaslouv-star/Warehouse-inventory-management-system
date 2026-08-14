@@ -239,8 +239,6 @@ namespace Система_управления_складскими_запаса�
         {
             string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {level} : {message}";
 
-            Console.WriteLine(logEntry);
-
             lock (LogLock)
             {
                 File.AppendAllText(LogFilePath, logEntry +  Environment.NewLine);
@@ -359,6 +357,8 @@ namespace Система_управления_складскими_запаса�
         static async Task<List<WareHouse>> LoadData()
         {
             string filepath = "warehouses.json";
+
+            Logger.Log($"Загрузка данных.");
 
             if (!File.Exists(filepath))
             {
