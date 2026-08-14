@@ -229,11 +229,30 @@ namespace Система_управления_складскими_запаса�
         }
     }
 
+    public static class Logger
+    {
+        private static readonly string LogFilePath = "log.txt";
+
+        private static readonly object LogLock = new object();
+
+        public static void Log(string message, string level = "INFO")
+        {
+            string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {level} : {message}";
+
+            Console.WriteLine(logEntry);
+
+            lock (LogLock)
+            {
+                File.AppendAllText(LogFilePath, logEntry +  Environment.NewLine);
+            }
+        }
+    }
+
     internal class Program
     {
         static async Task Main(string[] args)
         {
-
+            Logger.Log($"Программа запущена.");
 
             List<WareHouse> wareHouses = await LoadData();
 
@@ -309,29 +328,35 @@ namespace Система_управления_складскими_запаса�
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Ошибка {ex.Message}");
+
+                    Logger.Log($"ОШИБКА: {ex.GetType().Name} - {ex.Message}. Метод: {ex.TargetSite?.Name}", "ERROR");
                 }
             }
         }
 
-        static Task<List<WareHouse>> SaveData(List<WareHouse> wareHouses)
+        static async Task SaveData(List<WareHouse> wareHouses)
         {
             try
             {
+                using FileStream createStream = File.Create("warehouses.json");
+
                 var options = new JsonSerializerOptions { WriteIndented = true };
 
-                string jsonString = JsonSerializer.SerializeAsync(wareHouses, options);
-
-                File.Create("warehouses.json", jsonString);
+                await JsonSerializer.SerializeAsync(createStream, wareHouses, options);
 
                 Console.WriteLine("Данные сохранены в warehouses.json");
+
+                Logger.Log("Сохранение данных в warehouses.json.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка {ex.Message}");
+
+                Logger.Log($"Ошибка {ex.Message}");
             }
         }
 
-        static Task<List<WareHouse>> LoadData()
+        static async Task<List<WareHouse>> LoadData()
         {
             string filepath = "warehouses.json";
 
@@ -341,7 +366,7 @@ namespace Система_управления_складскими_запаса�
 
                 var wareHousefactory = new WareHouseFactory();
 
-                return new Task<List<WareHouse>>
+                return new List<WareHouse>
                 {
                     wareHousefactory.CreateWareHouse(1, "Главный склад", "ул. Центральная д.1"),
 
@@ -351,9 +376,9 @@ namespace Система_управления_складскими_запаса�
 
             try
             {
-                string jsonString = File.OpenRead(filepath);
+                using FileStream openStream = File.OpenRead(filepath);
 
-                var loadedData = JsonSerializer.DeserializeAsync<List<WareHouse>>(jsonString);
+                var loadedData = await JsonSerializer.DeserializeAsync<List<WareHouse>>(openStream);
 
                 Console.WriteLine("Данные загружены.");
 
@@ -362,8 +387,12 @@ namespace Система_управления_складскими_запаса�
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка {ex.Message}. Создан пустой список");
+
+                Logger.Log($"ОШИБКА: {ex.GetType().Name} - {ex.Message}. Метод: {ex.TargetSite?.Name}", "ERROR");
+
                 return new List<WareHouse>();
             }
+
         }
 
         static void ViewMenu()
@@ -384,6 +413,7 @@ namespace Система_управления_складскими_запаса�
             Console.WriteLine("║ 11. Выход (сохранение данных).         ║");
             Console.WriteLine("╚════════════════════════════════════════╝");
         }
+
 
         static void AddItemToWH(List<WareHouse> wareHouses, WareHouseItemFactory itemFactory)
         {
@@ -449,6 +479,14 @@ namespace Система_управления_складскими_запаса�
 
             try
             {
+                string logItemType = "";
+
+                int electronicsWarrantyPeriod = 0;
+
+                DateTime foodExpirationDate;
+
+                string furnitureDimession = "";
+
                 switch (itemTypeChoice)
                 {
                     case 1:
@@ -456,11 +494,15 @@ namespace Система_управления_складскими_запаса�
                         {
                             Console.WriteLine("Введите гарантийный срок (мес.):");
 
-                            if (int.TryParse(Console.ReadLine(), out int electronicsWarrantyPeriod) || electronicsWarrantyPeriod >= 0)
+                            if (int.TryParse(Console.ReadLine(), out electronicsWarrantyPeriod) || electronicsWarrantyPeriod >= 0)
                             {
                                 targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Electronics, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, electronicsWarrantyPeriod));
 
                                 Console.WriteLine("Товар добавлен.");
+
+                                logItemType = "Электроника";
+
+                                Logger.Log($"Товар добавлен на склад ID: {targetWhToCreateItem.ID}: ID:{itemID} | тип: {logItemType} | название: {itemName} | категория: {itemCategory} | цена: {itemPrice} | колличество: {itemQuantity} | гарантийный срок: {electronicsWarrantyPeriod}");
 
                                 break;
                             }
@@ -469,7 +511,6 @@ namespace Система_управления_складскими_запаса�
                         break;
 
                     case 2:
-                        DateTime foodExpirationDate;
                         while (true)
                         {
                             Console.WriteLine("Введите дату окончания срока (в формате ДД.ММ.ГГГГ, например 15.08.2026):");
@@ -479,10 +520,15 @@ namespace Система_управления_складскими_запаса�
 
                                 Console.WriteLine("Товар добавлен.");
 
+                                logItemType = "Еда";
+
+                                Logger.Log($"Товар добавлен на склад ID: {targetWhToCreateItem.ID}: ID:{itemID} | тип: {logItemType} | название: {itemName} | категория: {itemCategory} | цена: {itemPrice} | колличество: {itemQuantity} | дата окончания срока: {foodExpirationDate} ");
+
                                 break;
                             }
                             Console.WriteLine("Некорректный ввод.");
                         }
+
                         break;
 
                     case 3:
@@ -506,17 +552,24 @@ namespace Система_управления_складскими_запаса�
                             Console.WriteLine("Некорректный ввод.");
                         }
 
-                        string furnitureDimession = $"{lenght}x{width}x{height}";
+                        furnitureDimession = $"{lenght}x{width}x{height}";
 
                         targetWhToCreateItem.AddItem(itemFactory.CreateItem(ItemType.Furniture, itemID, itemName, itemCategory, itemPrice, itemQuantity, itemLastUpdate, furnitureDimession));
 
                         Console.WriteLine("Товар добавлен.");
+
+                        logItemType = "Мебель";
+
+                        Logger.Log($"Товар добавлен на склад ID: {targetWhToCreateItem.ID}: ID:{itemID} | тип: {logItemType} | название: {itemName} | категория: {itemCategory} | цена: {itemPrice} | колличество: {itemQuantity} | габариты: {furnitureDimession}");
+
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка {ex.Message}");
+                Console.WriteLine($"Ошибка: {ex.Message}");
+
+                Logger.Log($"ОШИБКА: {ex.GetType().Name} - {ex.Message}. Метод: {ex.TargetSite?.Name}", "ERROR");
             }
         }
         static void RemoveItemFromWH(List<WareHouse> wareHouses)
@@ -549,6 +602,8 @@ namespace Система_управления_складскими_запаса�
             {
                 Console.WriteLine("Товар не найден");
             }
+
+            Logger.Log($"Товар удалён со склада ID: {whIDToRemove}: ID:{itemToRemove.ID} | название: {itemToRemove.Name} | цена: {itemToRemove.Price} | колличество: {itemToRemove.Quantity}");
         }
 
         static void TransferItemTo(List<WareHouse> wareHouses)
@@ -602,6 +657,8 @@ namespace Система_управления_складскими_запаса�
             itemToTransfer.TransferTo(targetWh, transferItemQuantity);
 
             Console.WriteLine("Товар перемещён");
+
+            Logger.Log($"Товар ID:{itemToTransfer.ID} перемещён со склада ID:{sourceWh.ID} на склад ID:{targetWh.ID}");
         }
 
         static void AddWH(List<WareHouse> wareHouses, WareHouseFactory wareHouseFactory)
@@ -633,6 +690,8 @@ namespace Система_управления_складскими_запаса�
             wareHouses.Add(newWareHouse);
 
             Console.WriteLine("Склад добавлен");
+
+            Logger.Log($"Добавлен склад ID:{wareHouseIDToCreate} | название:{wareHouseName} | адрес:{wareHouseAddress}");
         }
 
         static void RemoveWH(List<WareHouse> wareHouses)
@@ -661,6 +720,8 @@ namespace Система_управления_складскими_запаса�
             wareHouses.Remove(wareHouseToRemove);
 
             Console.WriteLine("Склад удалён");
+
+            Logger.Log($"Удалён склад ID:{wareHouseToRemove.ID} | название:{wareHouseToRemove.Name} | адрес:{wareHouseToRemove.Address}");
         }
 
         static void GetWHList(List<WareHouse> wareHouses)
@@ -801,11 +862,13 @@ namespace Система_управления_складскими_запаса�
             Console.WriteLine($"Стоимость хранения {targetItem.Name} равна {targetItem.CalculateStorageCost(days)} руб.");
         }
 
-        static async Task Exit(List<WareHouse> wareHouses, ref bool isRunning)
+        static Task Exit(List<WareHouse> wareHouses, ref bool isRunning)
         {
-            SaveData(wareHouses);
-
             isRunning = false;
+
+            Logger.Log($"Программа завершена.");
+
+            return SaveData(wareHouses);
         }
     }
 }
